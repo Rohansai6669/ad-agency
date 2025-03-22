@@ -879,16 +879,21 @@
         // Handle touch movement
         function handleTouchMove(e) {
             if (e.touches.length !== 1) return;
-
-            // Simulate mouse event from touch
+    
+            e.preventDefault(); // Prevent default browser behavior
+            
             const touch = e.touches[0];
-            const mouseEvent = {
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-            };
-
-            handleMouseMove(mouseEvent);
-
+            const diffX = startX - touch.clientX;
+            const diffY = startY - touch.clientY;
+            
+            // Calculate new position
+            const newTranslateX = gridTranslateX - diffX;
+            const newTranslateY = gridTranslateY - diffY;
+            
+            // Apply movement
+            const grid = document.getElementById("grid");
+            grid.style.transform = `translate(${newTranslateX}px, ${newTranslateY}px)`;
+            
             // Hide instructions after interaction
             const instructions = document.getElementById("instructions");
             if (instructions && !instructions.classList.contains("hide-instructions")) {
@@ -896,6 +901,27 @@
                 setTimeout(() => {
                     instructions.style.display = "none";
                 }, 500);
+            }
+        }
+        // Add these new functions
+        function handleTouchStart(e) {
+            if (e.touches.length !== 1) return;
+            
+            e.preventDefault();
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+        }
+
+        function handleTouchEnd(e) {
+            // Update the saved position
+            const grid = document.getElementById("grid");
+            const transformValue = grid.style.transform;
+            const matches = transformValue.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+            
+            if (matches && matches.length === 3) {
+                gridTranslateX = parseFloat(matches[1]);
+                gridTranslateY = parseFloat(matches[2]);
             }
         }
 
@@ -908,7 +934,7 @@
 
             // Set up movement listeners
             document.addEventListener("mousemove", handleMouseMove);
-            document.addEventListener("touchmove", handleTouchMove, { passive: true });
+            document.addEventListener("touchmove", handleTouchMove, { passive: false });
 
             // Center view on load
             window.onload = function () {
