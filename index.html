@@ -1,529 +1,926 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dynamic Brand Landing Page</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHEME - Dynamic Grid Layout</title>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "Arial", sans-serif;
-        overflow: auto;
-        width: 100vw;
-        height: 100vh;
-        background-color: #fffdfc;
-        touch-action: none; /* Prevents default touch behaviors */
-      }
-
-      .brand-container {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 10;
-        mix-blend-mode: difference;
-        width: 100%;
-        text-align: center;
-      }
-
-      .brand-name {
-        font-size: 10vw;
-        font-weight: bold;
-        color: rgb(250, 247, 247);
-        background: rgba(0, 0, 0, 0.5);
-        text-align: center;
-        letter-spacing: 2px;
-        mix-blend-mode: difference;
-        text-transform: uppercase;
-        user-select: none;
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-      }
-
-       .image-grid {
-        columns: 4;
-      } 
-
-      @media (max-width: 768px) {
-        .brand-name {
-          font-size: 15vw;
+        * {
+            margin: 0;
+            padding: 0;
         }
-      }
 
-      .image-grid {
-        display: flex;
-        flex-wrap: wrap;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        gap: 10px; /* Adds space between grid items */
-        width: 90vw;
-        margin: auto;
+        body {
+            font-family: "Arial", sans-serif;
+            background-color: #fffdfc;
+            touch-action: none; /* Prevents default touch behaviors */
+           
+
+        }
        
-        /* display: flex;
-            flex
-            grid-template-columns: repeat(3, minmax(250px, 1fr));
-            grid-gap: 16px;
-            padding: 16px;
+
+        /* Top fog layer */
+        body::before {
+            top: 0;
+            left: 0;
+            background: radial-gradient(
+                ellipse at center,
+                rgba(255, 255, 255, 0) 30%,
+                rgba(255, 255, 255, 0.8) 100%
+            );
+        }
+        /* Bottom fog layer */
+        body::after {
+            bottom: 0;
+            left: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0) 40%,
+                rgba(255, 255, 255, 0.9) 100%
+            );
+        }
+        /* Side fog effects */
+        .side-fog-left, .side-fog-right {
+            position: fixed;
+            top: 0;
+            height: 100%;
+            width: 20%;
+            pointer-events: none;
+            z-index: 15;
+        }
+        
+        .side-fog-left {
+            left: 0;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0.9) 0%,
+                rgba(255, 255, 255, 0) 100%
+            );
+        }
+        
+        .side-fog-right {
+            right: 0;
+            background: linear-gradient(
+                to left,
+                rgba(255, 255, 255, 0.9) 0%,
+                rgba(255, 255, 255, 0) 100%
+            );
+        }
+        
+        /* Animated fog particles */
+        .fog-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 100%;*/
-      }
-      .image-grid {
-        columns: 3;
-        column-gap: 16px;
-      }
-
-      .image-item {
-        width: calc(40.33% - 10px); /* 3 items per row */
-        aspect-ratio: 1/1; /* Keeps each item square */
-        background-color: #3498db;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        background-size: cover;
-        position: relative;
-        border-radius: 16px;
-        overflow: hidden;
-        break-inside: avoid;
-        margin-bottom: 16px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        cursor: pointer;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-
-      .image-item:hover {
-        z-index: 5;
-        transform: scale(1.05);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-      }
-
-      /* Animation for images */
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: scale(0.9);
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 14;
         }
-        to {
-          opacity: 1;
-          transform: scale(1);
+        
+        .fog-particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            filter: blur(6px);
+            animation: float 15s infinite ease-in-out;
         }
-      }
-
-      .detail-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.9);
-        z-index: 20;
-        display: none;
-        justify-content: center;
-        align-items: center;
-        padding: 2rem;
-        flex-direction: column;
-        color: white;
-        overflow-y: auto;
-      }
-
-      .detail-content {
-        max-width: 800px;
-        width: 90%;
-        text-align: center;
-        animation: fadeIn 0.5s ease;
-      }
-
-      .detail-image {
-        width: 100%;
-        max-height: 60vh;
-        object-fit: contain;
-        margin-bottom: 2rem;
-        border-radius: 8px;
-      }
-
-      .detail-title {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-      }
-
-      @media (max-width: 768px) {
-        .detail-title {
-          font-size: 1.8rem;
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.1;
+            }
+            50% {
+                transform: translateY(-20px) translateX(15px);
+                opacity: 0.3;
+            }
         }
 
-        .detail-description {
-          font-size: 1rem;
+        
+        .container {
+            width: 100%;
+            height: 100vh;
+            max-height: 1600px;
+            margin: 0 auto;
+            aspect-ratio: 1;
+            position: relative;
+            padding: 20px;
+            box-sizing: border-box;
         }
-      }
+        
+        .grid {
+            display: flex;
+            height: 100%;
+            justify-content: space-between;
+            gap: 20px;
+            transform: translate(0, 0);
+            transition: transform 0.3s ease;
+        }
+        
+        .column {
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .box {
+           
+            width: 200px;
+            max-width: 200px; /* Adjust as needed */
+            height: 300px;
+            box-sizing: border-box;
+            opacity: 0;
+            margin: 50px ;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+        }
+         /*
+        .box:hover {
+            z-index: 5;
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        Make boxes visible */
+        .col-1 .box:nth-child(-n+2),
+        .col-2 .box:nth-child(-n+5),
+        .col-3 .box:nth-child(-n+4),
+        .col-4 .box:nth-child(-n+5),
+        .col-5 .box:nth-child(-n+4),
+        .col-6 .box:nth-child(-n+5),
+        .col-7 .box:nth-child(-n+2) {
+            opacity: 1;
+        }
 
-      .detail-description {
-        font-size: 1.2rem;
-        line-height: 1.6;
-        margin-bottom: 2rem;
-      }
+        .col-4 .box:nth-child(3){
+            opacity: 0;
+        }
+        
+        /* Animation for boxes */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .box {
+            animation: fadeIn 0.8s ease forwards;
+        }
 
-      .close-button {
-        position: absolute;
-        top: 2rem;
-        right: 2rem;
-        background: none;
-        border: none;
-        color: white;
-        font-size: 2rem;
-        cursor: pointer;
-      }
+        .brand-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            mix-blend-mode: difference;
+            width: 100%;
+            text-align: center;
+        }
 
-      .back-button {
-        padding: 12px 24px;
-        background: white;
-        color: black;
-        border: none;
-        border-radius: 30px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-
-      .back-button:hover {
-        background: #eee;
-        transform: scale(1.05);
-      }
-
-      @media (max-width: 768px) {
-        .close-button {
-          top: 1rem;
-          right: 1rem;
-          font-size: 1.5rem;
+        .brand-name {
+            font-size: 5vw;
+            font-weight: bold;
+            color: rgb(250, 247, 247);
+            background: rgba(0, 0, 0, 0);
+            text-align: center;
+            letter-spacing: 2px;
+            mix-blend-mode: difference;
+            text-transform: uppercase;
+            user-select: none;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
 
         .detail-overlay {
-          padding: 1rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 20;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            flex-direction: column;
+            color: white;
+            overflow-y: auto;
         }
 
-        .image-item {
-          margin: 8px; /* Smaller gap on mobile */
+        .detail-content {
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
         }
-      }
 
-      /* Instructions overlay for mobile */
-      .instructions {
-        position: fixed;
-        bottom: 20px;
-        left: 0;
-        width: 100%;
-        text-align: center;
-        color: white;
-        background: rgba(0, 0, 0, 0.5);
-        padding: 10px;
-        z-index: 8;
-        font-size: 14px;
-        opacity: 1;
-        transition: opacity 0.5s ease;
-      }
+        .detail-image {
+            width: 100%;
+            max-height: 60vh;
+            object-fit: contain;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+        }
 
-      .hide-instructions {
-        opacity: 0;
-      }
+        .detail-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-description {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .back-button {
+            padding: 12px 24px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: #eee;
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            z-index: 8;
+            font-size: 14px;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .hide-instructions {
+            opacity: 0;
+        }
+        .brand-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            mix-blend-mode: difference;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Text animation styles for brand name */
+        .brand-name {
+            font-size: 5vw;
+            padding-left:2% ;
+            font-weight: bold;
+            color: rgb(250, 247, 247);
+            background: rgba(0, 0, 0, 0.5);
+            text-align: center;
+            letter-spacing: 2px;
+            mix-blend-mode: difference;
+            text-transform: uppercase;
+            user-select: none;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            /* Adding letter animation */
+            display: inline-block;
+            overflow: hidden;
+            animation: textReveal 1.5s ease forwards;
+        }
+
+        /* Brand text animation */
+        @keyframes textReveal {
+            0% {
+                opacity: 0;
+                transform: translateY(50px) scale(0.8);
+                letter-spacing: -5px;
+              
+            }
+            50% {
+                opacity: 0.5;
+                
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                letter-spacing: 2px;
+                filter: blur(0);
+            }
+        }
+
+        /* Individual letter animation */
+        .animated-letter {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: letterFadeIn 0.5s ease forwards;
+        }
+
+        @keyframes letterFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 30;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            flex-direction: column;
+            color: white;
+            overflow-y: auto;
+        }
+
+        .detail-content {
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .detail-image {
+            width: 100%;
+            max-height: 60vh;
+            object-fit: contain;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+        }
+
+        /* Text animation for detail view */
+        .detail-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.6s ease forwards 0.3s;
+        }
+
+        .detail-description {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.6s ease forwards 0.5s;
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-button {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .back-button {
+            padding: 12px 24px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.6s ease forwards 0.7s;
+        }
+
+        .back-button:hover {
+            background: #eee;
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            z-index: 25;
+            font-size: 14px;
+            opacity: 0;
+            animation: fadeIn 1.5s ease forwards 2s;
+            transition: opacity 0.5s ease;
+        }
+
+        .hide-instructions {
+            opacity: 0;
+        }
+
+        /* Text reveal animation for instructions */
+        @keyframes revealText {
+            0% {
+                width: 0;
+            }
+            100% {
+                width: 100%;
+            }
+        }
+
+
+        html, body {
+           
+            -ms-overflow-style: none; /* Hide scrollbar for IE */
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
+        }
+        
+        ::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for Webkit browsers */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .brand-name {
+                font-size: 15vw;
+            }
+            
+            .grid {
+                gap: 40px;
+            }
+            
+            .column {
+                width: 50%;
+            }
+            
+            .detail-title {
+                font-size: 1.8rem;
+            }
+
+            .detail-description {
+                font-size: 1rem;
+            }
+            
+            .close-button {
+                top: 1rem;
+                right: 1rem;
+                font-size: 1.5rem;
+            }
+
+            .detail-overlay {
+                padding: 1rem;
+            }
+        }
+    
     </style>
-  </head>
-  <body>
+</head>
+<body>
+    
+      <!-- Fog effects -->
+      <div class="side-fog-left"></div>
+      <div class="side-fog-right"></div>
+      <div class="fog-particles" id="fogParticles"></div>
+
     <!-- Centered Brand Name -->
     <div class="brand-container">
-      <h1 class="brand-name">PHEME</h1>
-    </div>
-
-    <!-- Image Grid Background -->
-    <div class="image-grid" id="imageGrid">
-      <!-- Images will be added dynamically with JavaScript -->
+        <h1 class="brand-name">PHEME</h1>
     </div>
 
     <!-- Mobile Instructions -->
     <div class="instructions" id="instructions">
-      Move cursor to explore • Tap images to view details
+        Move cursor to explore • Tap images to view details
+    </div>
+
+    <div class="container">
+        <div class="grid" id="grid">
+            <!-- Column 1: 2 boxes -->
+            <div class="column col-1" style="margin-top:550px;">
+                <div class="box" data-id="1"></div>
+                <div class="box" data-id="2"></div>
+                <!-- <div class="box"></div>
+                <div class="box"></div>
+                <div class="box"></div> -->
+            </div>
+            
+            <!-- Column 2: 5 boxes -->
+            <div class="column col-2">
+                <div class="box" data-id="3"></div>
+                <div class="box" data-id="4"></div>
+                <div class="box" data-id="5"></div>
+                <div class="box" data-id="6"></div>
+                <div class="box" data-id="7"></div>
+            </div>
+            
+            <!-- Column 3: 4 boxes -->
+            <div class="column col-3" style="margin-top:100px;">
+                <div class="box" data-id="8"></div>
+                <div class="box" data-id="9"></div>
+                <div class="box" data-id="10"></div>
+                <div class="box" data-id="1"></div>
+                <div class="box"></div>
+            </div>
+            
+            <!-- Column 4: 5 boxes -->
+            <div class="column col-4" style="margin-top:100px;">
+                <div class="box" data-id="2"></div>
+                <div class="box" data-id="3"></div>
+                <div class="box"></div>
+                <div class="box" data-id="4"></div>
+                <div class="box" data-id="5"></div>
+            </div>
+            
+            <!-- Column 5: 4 boxes -->
+            <div class="column col-5" style="margin-top:100px;">
+                <div class="box" data-id="6"></div>
+                <div class="box" data-id="7"></div>
+                <div class="box" data-id="8"></div>
+                <div class="box" data-id="9"></div>
+                <div class="box"></div>
+            </div>
+            
+            <!-- Column 6: 5 boxes -->
+            <div class="column col-6">
+                <div class="box" data-id="10"></div>
+                <div class="box" data-id="1"></div>
+                <div class="box" data-id="2"></div>
+                <div class="box" data-id="3"></div>
+                <div class="box" data-id="4"></div>
+            </div>
+            
+            <!-- Column 7: 2 boxes -->
+            <div class="column col-7" style="margin-top:550px;">
+                <div class="box" data-id="5"></div>
+                <div class="box" data-id="6"></div>
+                <!-- <div class="box"></div>
+                <div class="box"></div>
+                <div class="box"></div> -->
+            </div>
+        </div>
     </div>
 
     <!-- Detail Page Overlay -->
     <div class="detail-overlay" id="detailOverlay">
-      <button class="close-button" id="closeDetail">×</button>
-      <div class="detail-content" id="detailContent">
-        <!-- Content will be dynamically populated -->
-      </div>
+        <button class="close-button" id="closeDetail">×</button>
+        <div class="detail-content" id="detailContent">
+            <!-- Content will be dynamically populated -->
+        </div>
     </div>
 
     <script>
-      // Expanded image data for 16+ images
-      const imageData = [
+        // Image data
+        const imageData =[
         {
-          id: 1,
-          url: "./images/1.jpg",
-          title: "Image Title 1",
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "id": 1,
+          "url": "./images/1.jpg",
+          "title": "Image Title 1",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         },
         {
-          id: 2,
-          url: "./images/2.jpg",
-          title: "Image Title 2",
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "id": 2,
+          "url": "./images/2.jpg",
+          "title": "Image Title 2",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         },
         {
-          id: 3,
-          url: "./images/3.jpg",
-          title: "Image Title 3",
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "id": 3,
+          "url": "./images/3.jpg",
+          "title": "Image Title 3",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         },
         {
-          id: 4,
-          url: "./images/4.jpg",
-          title: "Image Title 4",
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "id": 4,
+          "url": "./images/4.jpg",
+          "title": "Image Title 4",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         },
         {
-          id: 5,
-          url: "./images/5.jpg",
-          title: "Image Title 5",
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "id": 5,
+          "url": "./images/5.jpg",
+          "title": "Image Title 5",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         },
         {
-          id: 6,
-          url: "./images/6.jpg",
-          title: "Image Title 6",
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "id": 6,
+          "url": "./images/6.jpg",
+          "title": "Image Title 6",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         },
         {
-          id: 7,
-          url: "./images/7.jpg",
-          title: "Image Title 7",
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "id": 7,
+          "url": "./images/7.jpg",
+          "title": "Image Title 7",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         },
         {
-          id: 8,
-          url: "./images/8.jpg",
-          title: "Image Title 8",
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "id": 8,
+          "url": "./images/8.jpg",
+          "title": "Image Title 8",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         },
         {
-          id: 9,
-          url: "./images/9.jpg",
-          title: "Image Title 9",
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "id": 9,
+          "url": "./images/9.jpg",
+          "title": "Image Title 9",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         },
-        ,
         {
-          id: 10,
-          url: "./images/3.jpg",
-          title: "Image Title 10",
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "id": 10,
+          "url": "./images/1.jpg",
+          "title": "Image Title 10",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         },
+        {
+          "id": 11,
+          "url": "./images/2.jpg",
+          "title": "Image Title 11",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 12,
+          "url": "./images/3.jpg",
+          "title": "Image Title 12",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 13,
+          "url": "./images/4.jpg",
+          "title": "Image Title 13",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 14,
+          "url": "./images/5.jpg",
+          "title": "Image Title 14",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 15,
+          "url": "./images/6.jpg",
+          "title": "Image Title 15",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 16,
+          "url": "./images/7.jpg",
+          "title": "Image Title 16",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 17,
+          "url": "./images/8.jpg",
+          "title": "Image Title 17",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 18,
+          "url": "./images/9.jpg",
+          "title": "Image Title 18",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 19,
+          "url": "./images/1.jpg",
+          "title": "Image Title 19",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 20,
+          "url": "./images/2.jpg",
+          "title": "Image Title 20",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 21,
+          "url": "./images/3.jpg",
+          "title": "Image Title 21",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 22,
+          "url": "./images/4.jpg",
+          "title": "Image Title 22",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 23,
+          "url": "./images/5.jpg",
+          "title": "Image Title 23",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 24,
+          "url": "./images/6.jpg",
+          "title": "Image Title 24",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 25,
+          "url": "./images/7.jpg",
+          "title": "Image Title 25",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 26,
+          "url": "./images/8.jpg",
+          "title": "Image Title 26",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+          "id": 27,
+          "url": "./images/9.jpg",
+          "title": "Image Title 27",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        }
       ];
 
-      // Create and position the image elements in zig-zag strips
-      function createImageGrid() {
-        const grid = document.getElementById("imageGrid");
-        grid.innerHTML = ""; // Clear existing images
+       // Create fog particles
+       function createFogParticles() {
+        const fogContainer = document.getElementById('fogParticles');
+        const particleCount = 20;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'fog-particle';
+            
+            // Random size
+            const size = Math.random() * 80 + 40;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            // Random position
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            
+            // Random animation delay
+            particle.style.animationDelay = `${Math.random() * 15}s`;
+            
+            fogContainer.appendChild(particle);
+        }
+    }
 
-        const isMobile = window.innerWidth <= 768;
+      
+        // Initialize visible boxes with images
+        function initializeBoxes() {
+            const boxes = document.querySelectorAll('.box[data-id]');
+            
+            boxes.forEach(box => {
+                const imageId = parseInt(box.dataset.id);
+                const image = imageData.find(img => img.id === imageId);
+                
+                if (image) {
+                    box.style.backgroundImage = `url(${image.url})`;
+                    box.addEventListener('click', () => {
+                        showDetail(image);
+                    });
+                }
+            });
+        }
 
-        // Number of horizontal strips
-        const strips = isMobile ? 4 : 5;
+        // Show detail overlay
+        function showDetail(image) {
+            const overlay = document.getElementById("detailOverlay");
+            const content = document.getElementById("detailContent");
 
-        // Calculate image dimensions
-        const imageWidth = isMobile ? 35 : 20; // percentage of screen width
-        const imageHeight = isMobile ? 20 : 18; // percentage of screen height
-
-        imageData.forEach((image, index) => {
-          const imageElement = document.createElement("div");
-          imageElement.className = "image-item";
-          imageElement.style.backgroundImage = `url(${image.url})`;
-
-          // Set size with slight variation
-          // const widthVariation = Math.random() * 5 - 2.5; // -2.5% to +2.5%
-          //const heightVariation = Math.random() * 5 - 2.5; // -2.5% to +2.5%
-
-          //imageElement.style.width = `${imageWidth + widthVariation}%`;
-          //imageElement.style.height = `${imageHeight + heightVariation}%`;
-
-          // Determine which strip this image belongs to
-          const stripIndex = index % strips;
-
-          // Calculate y-position based on strip
-          const stripHeight = 100 / strips;
-          const baseY =
-            stripIndex * stripHeight +
-            (stripHeight - parseFloat(imageElement.style.height)) / 2;
-
-          // Calculate x-position in a zig-zag pattern
-          // Images in odd-numbered strips go right-to-left
-          const imagesPerStrip = Math.ceil(imageData.length / strips);
-          const positionInStrip = Math.floor(index / strips);
-          const isReverseStrip = stripIndex % 2 === 1;
-
-          let posX;
-          if (isReverseStrip) {
-            // Right-to-left strips
-            posX =
-              100 -
-              positionInStrip * (100 / imagesPerStrip) -
-              parseFloat(imageElement.style.width) / 2;
-          } else {
-            // Left-to-right strips
-            posX = positionInStrip * (100 / imagesPerStrip);
-          }
-
-          // Add random offset for natural look
-          const offsetX = Math.random() * 20 - 10; // -10% to +10%
-          const offsetY = Math.random() * 10 - 5; // -5% to +5%
-
-          // Apply position
-          //imageElement.style.left = `${posX + offsetX}%`;
-          //imageElement.style.top = `${baseY + offsetY}%`;
-
-          // Add animation with delay based on index
-          imageElement.style.animation = `fadeIn 0.8s ease ${
-            index * 0.1
-          }s forwards`;
-          imageElement.style.opacity = "0";
-
-          // Store the image data
-          imageElement.dataset.id = image.id;
-
-          grid.appendChild(imageElement);
-        });
-
-        // Add click listeners after all elements are created
-        const imageItems = document.querySelectorAll(".image-item");
-        imageItems.forEach((item) => {
-          item.addEventListener("click", (e) => {
-            const imageId = parseInt(item.dataset.id);
-            const image = imageData.find((img) => img.id === imageId);
-            showDetail(image);
-            e.stopPropagation();
-          });
-        });
-      }
-
-      // Show detail page for clicked image
-      function showDetail(image) {
-        const overlay = document.getElementById("detailOverlay");
-        const content = document.getElementById("detailContent");
-
-        // Populate content
-        content.innerHTML = `
+            // Populate content
+            content.innerHTML = `
                 <img src="${image.url}" alt="${image.title}" class="detail-image">
                 <h2 class="detail-title">${image.title}</h2>
                 <p class="detail-description">${image.description}</p>
                 <button class="back-button">Explore More</button>
             `;
 
-        overlay.style.display = "flex";
+            overlay.style.display = "flex";
 
-        // Prevent scrolling on the main page
-        document.body.style.overflow = "hidden";
+            // Prevent scrolling on the main page
+            document.body.style.overflow = "hidden";
 
-        // Add event listener to the back button
-        const backButton = content.querySelector(".back-button");
-        backButton.addEventListener("click", closeDetail);
-      }
-
-      // Close detail page
-      function closeDetail() {
-        const overlay = document.getElementById("detailOverlay");
-        overlay.style.display = "none";
-
-        // Re-enable scrolling
-        document.body.style.overflow = "auto";
-      }
-
-      // Handle cursor-based movement
-      function handleMouseMove(e) {
-        const grid = document.getElementById("imageGrid");
-
-        // Get the mouse position relative to the center of the screen
-        const mouseX = e.clientX;
-        const mouseY = e.clientY;
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
-
-        // Calculate the distance from center (normalized to -1 to 1)
-        const distX = (mouseX - centerX) / centerX;
-        const distY = (mouseY - centerY) / centerY;
-
-        // Movement factor - how much the background moves
-        const moveFactor = 30; // Pixels to move
-
-        // Apply inverse movement (cursor right = background left)
-        const moveX = -distX * moveFactor;
-        const moveY = -distY * moveFactor;
-
-        // Apply the transform with smooth transition
-        grid.style.transform = `translate(${moveX}px, ${moveY}px)`;
-      }
-
-      // Handle touch movement for mobile
-      function handleTouchMove(e) {
-        if (e.touches.length !== 1) return;
-
-        // Simulate mouse event from touch
-        const touch = e.touches[0];
-        const mouseEvent = {
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-        };
-
-        handleMouseMove(mouseEvent);
-
-        // Hide instructions after first interaction
-        const instructions = document.getElementById("instructions");
-        if (
-          instructions &&
-          !instructions.classList.contains("hide-instructions")
-        ) {
-          instructions.classList.add("hide-instructions");
-          setTimeout(() => {
-            instructions.style.display = "none";
-          }, 500);
+            // Add event listener to the back button
+            const backButton = content.querySelector(".back-button");
+            backButton.addEventListener("click", closeDetail);
         }
-      }
 
-      // Initialize the page
-      document.addEventListener("DOMContentLoaded", () => {
-        createImageGrid();
+        // Close detail overlay
+        function closeDetail() {
+            const overlay = document.getElementById("detailOverlay");
+            overlay.style.display = "none";
 
-        // Set up close button event
-        document
-          .getElementById("closeDetail")
-          .addEventListener("click", closeDetail);
+            // Re-enable scrolling
+            document.body.style.overflow = "auto";
+        }
 
-        // Set up cursor movement listeners
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("touchmove", handleTouchMove, {
-          passive: true,
+        // Handle mouse movement
+        function handleMouseMove(e) {
+            const grid = document.getElementById("grid");
+
+            // Get mouse position relative to center
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            // Calculate distance from center (normalized)
+            const distX = (mouseX - centerX) / centerX;
+            const distY = (mouseY - centerY) / centerY;
+
+            // Movement factor
+            const moveFactor = 30; // Pixels to move
+
+            // Apply inverse movement
+            const moveX = -distX * moveFactor;
+            const moveY = -distY * moveFactor;
+
+            // Apply transform with smooth transition
+            //grid.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        }
+
+        // Handle touch movement
+        function handleTouchMove(e) {
+            if (e.touches.length !== 1) return;
+
+            // Simulate mouse event from touch
+            const touch = e.touches[0];
+            const mouseEvent = {
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+            };
+
+            handleMouseMove(mouseEvent);
+
+            // Hide instructions after interaction
+            const instructions = document.getElementById("instructions");
+            if (instructions && !instructions.classList.contains("hide-instructions")) {
+                instructions.classList.add("hide-instructions");
+                setTimeout(() => {
+                    instructions.style.display = "none";
+                }, 500);
+            }
+        }
+
+        // Initialize page on load
+        document.addEventListener("DOMContentLoaded", () => {
+            initializeBoxes();
+
+            // Set up close button
+            document.getElementById("closeDetail").addEventListener("click", closeDetail);
+
+            // Set up movement listeners
+            document.addEventListener("mousemove", handleMouseMove);
+            document.addEventListener("touchmove", handleTouchMove, { passive: true });
+
+            // Center view on load
+            window.onload = function () {
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: document.body.scrollHeight / 2 - window.innerHeight / 2,
+                        left: document.body.scrollWidth / 2 - window.innerWidth / 2,
+                        behavior: "smooth"
+                    });
+                }, 100);
+            };
         });
-
-        // Handle window resize
-        window.addEventListener("resize", () => {
-          createImageGrid();
-        });
-
-        // Handle screen orientation change for mobile
-        window.addEventListener("orientationchange", () => {
-          setTimeout(createImageGrid, 100); // Small delay to ensure dimensions are updated
-        });
-      });
     </script>
-  </body>
+</body>
 </html>
