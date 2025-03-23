@@ -14,11 +14,9 @@
             font-family: "Arial", sans-serif;
             background-color: #fffdfc;
             touch-action: none; /* Prevents default touch behaviors */
-           
-
+            overflow: hidden; /* Prevent scrollbars */
         }
        
-
         /* Top fog layer */
         body::before {
             top: 0;
@@ -102,12 +100,12 @@
         .container {
             width: 100%;
             height: 100vh;
-            max-height: 1600px;
+            max-height: 2000px;
             margin: 0 auto;
-            aspect-ratio: 1;
             position: relative;
             padding: 20px;
             box-sizing: border-box;
+            overflow: hidden;
         }
         
         .grid {
@@ -117,6 +115,17 @@
             gap: 20px;
             transform: translate(0, 0);
             transition: transform 0.3s ease;
+            position: absolute;
+            top: 0;
+            left: 0;
+            min-width: 100%;
+            min-height: 100%;
+            cursor: grab;
+        }
+        
+        .grid.grabbing {
+            cursor: grabbing;
+            transition: none; /* Remove transition when grabbing for immediate response */
         }
         
         .column {
@@ -127,26 +136,27 @@
         }
         
         .box {
-           
             width: 200px;
-            max-width: 200px; /* Adjust as needed */
+            max-width: 200px;
             height: 300px;
             box-sizing: border-box;
             opacity: 0;
-            margin: 50px ;
+            margin: 50px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
             background-size: cover;
             background-position: center;
+            border-radius: 8px;
+           
         }
-         /*
+        
         .box:hover {
             z-index: 5;
             transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            
         }
         
-        Make boxes visible */
+        /* Make boxes visible */
         .col-1 .box:nth-child(-n+2),
         .col-2 .box:nth-child(-n+5),
         .col-3 .box:nth-child(-n+4),
@@ -188,122 +198,10 @@
             text-align: center;
         }
 
-        .brand-name {
-            font-size: 5vw;
-            font-weight: bold;
-            color: rgb(250, 247, 247);
-            background: rgba(0, 0, 0, 0);
-            text-align: center;
-            letter-spacing: 2px;
-            mix-blend-mode: difference;
-            text-transform: uppercase;
-            user-select: none;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-
-        .detail-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 20;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-            flex-direction: column;
-            color: white;
-            overflow-y: auto;
-        }
-
-        .detail-content {
-            max-width: 800px;
-            width: 90%;
-            text-align: center;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .detail-image {
-            width: 100%;
-            max-height: 60vh;
-            object-fit: contain;
-            margin-bottom: 2rem;
-            border-radius: 8px;
-        }
-
-        .detail-title {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .detail-description {
-            font-size: 1.2rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
-
-        .close-button {
-            position: absolute;
-            top: 2rem;
-            right: 2rem;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 2rem;
-            cursor: pointer;
-        }
-
-        .back-button {
-            padding: 12px 24px;
-            background: white;
-            color: black;
-            border: none;
-            border-radius: 30px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .back-button:hover {
-            background: #eee;
-            transform: scale(1.05);
-        }
-
-        .instructions {
-            position: fixed;
-            bottom: 20px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: white;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            z-index: 8;
-            font-size: 14px;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-        }
-
-        .hide-instructions {
-            opacity: 0;
-        }
-        .brand-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 20;
-            mix-blend-mode: difference;
-            width: 100%;
-            text-align: center;
-        }
-
         /* Text animation styles for brand name */
         .brand-name {
             font-size: 5vw;
-            padding-left:2% ;
+            padding-left: 2%;
             font-weight: bold;
             color: rgb(250, 247, 247);
             background: rgba(0, 0, 0, 0.5);
@@ -384,6 +282,7 @@
             object-fit: contain;
             margin-bottom: 2rem;
             border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
         }
 
         /* Text animation for detail view */
@@ -420,6 +319,12 @@
             color: white;
             font-size: 2rem;
             cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .close-button:hover {
+            transform: scale(1.1);
+            color: #f0f0f0;
         }
 
         .back-button {
@@ -461,27 +366,6 @@
             opacity: 0;
         }
 
-        /* Text reveal animation for instructions */
-        @keyframes revealText {
-            0% {
-                width: 0;
-            }
-            100% {
-                width: 100%;
-            }
-        }
-
-
-        html, body {
-           
-            -ms-overflow-style: none; /* Hide scrollbar for IE */
-            scrollbar-width: none; /* Hide scrollbar for Firefox */
-        }
-        
-        ::-webkit-scrollbar {
-            display: none; /* Hide scrollbar for Webkit browsers */
-        }
-
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .brand-name {
@@ -513,25 +397,27 @@
             .detail-overlay {
                 padding: 1rem;
             }
+            
+            .instructions {
+                font-size: 12px;
+            }
         }
-    
     </style>
 </head>
 <body>
-    
-      <!-- Fog effects -->
-      <div class="side-fog-left"></div>
-      <div class="side-fog-right"></div>
-      <div class="fog-particles" id="fogParticles"></div>
+    <!-- Fog effects -->
+    <div class="side-fog-left"></div>
+    <div class="side-fog-right"></div>
+    <div class="fog-particles" id="fogParticles"></div>
 
     <!-- Centered Brand Name -->
     <div class="brand-container">
         <h1 class="brand-name">PHEME</h1>
     </div>
 
-    <!-- Mobile Instructions -->
+    <!-- Instructions -->
     <div class="instructions" id="instructions">
-        Move cursor to explore • Tap images to view details
+        Click and drag to explore • Tap images to view details
     </div>
 
     <div class="container">
@@ -540,9 +426,6 @@
             <div class="column col-1" style="margin-top:550px;">
                 <div class="box" data-id="1"></div>
                 <div class="box" data-id="2"></div>
-                <!-- <div class="box"></div>
-                <div class="box"></div>
-                <div class="box"></div> -->
             </div>
             
             <!-- Column 2: 5 boxes -->
@@ -559,44 +442,41 @@
                 <div class="box" data-id="8"></div>
                 <div class="box" data-id="9"></div>
                 <div class="box" data-id="10"></div>
-                <div class="box" data-id="1"></div>
+                <div class="box" data-id="11"></div>
                 <div class="box"></div>
             </div>
             
             <!-- Column 4: 5 boxes -->
             <div class="column col-4" style="margin-top:100px;">
-                <div class="box" data-id="2"></div>
-                <div class="box" data-id="3"></div>
+                <div class="box" data-id="12"></div>
+                <div class="box" data-id="13"></div>
                 <div class="box"></div>
-                <div class="box" data-id="4"></div>
-                <div class="box" data-id="5"></div>
+                <div class="box" data-id="14"></div>
+                <div class="box" data-id="15"></div>
             </div>
             
             <!-- Column 5: 4 boxes -->
             <div class="column col-5" style="margin-top:100px;">
-                <div class="box" data-id="6"></div>
-                <div class="box" data-id="7"></div>
-                <div class="box" data-id="8"></div>
-                <div class="box" data-id="9"></div>
+                <div class="box" data-id="16"></div>
+                <div class="box" data-id="17"></div>
+                <div class="box" data-id="18"></div>
+                <div class="box" data-id="19"></div>
                 <div class="box"></div>
             </div>
             
             <!-- Column 6: 5 boxes -->
             <div class="column col-6">
-                <div class="box" data-id="10"></div>
-                <div class="box" data-id="1"></div>
-                <div class="box" data-id="2"></div>
-                <div class="box" data-id="3"></div>
-                <div class="box" data-id="4"></div>
+                <div class="box" data-id="20"></div>
+                <div class="box" data-id="21"></div>
+                <div class="box" data-id="22"></div>
+                <div class="box" data-id="23"></div>
+                <div class="box" data-id="24"></div>
             </div>
             
             <!-- Column 7: 2 boxes -->
             <div class="column col-7" style="margin-top:550px;">
-                <div class="box" data-id="5"></div>
-                <div class="box" data-id="6"></div>
-                <!-- <div class="box"></div>
-                <div class="box"></div>
-                <div class="box"></div> -->
+                <div class="box" data-id="25"></div>
+                <div class="box" data-id="26"></div>
             </div>
         </div>
     </div>
@@ -611,197 +491,204 @@
 
     <script>
         // Image data
-        const imageData =[
-        {
-          "id": 1,
-          "url": "./images/1.jpg",
-          "title": "Image Title 1",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 2,
-          "url": "./images/2.jpg",
-          "title": "Image Title 2",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 3,
-          "url": "./images/3.jpg",
-          "title": "Image Title 3",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 4,
-          "url": "./images/4.jpg",
-          "title": "Image Title 4",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 5,
-          "url": "./images/5.jpg",
-          "title": "Image Title 5",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 6,
-          "url": "./images/6.jpg",
-          "title": "Image Title 6",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 7,
-          "url": "./images/7.jpg",
-          "title": "Image Title 7",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 8,
-          "url": "./images/8.jpg",
-          "title": "Image Title 8",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 9,
-          "url": "./images/9.jpg",
-          "title": "Image Title 9",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 10,
-          "url": "./images/1.jpg",
-          "title": "Image Title 10",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 11,
-          "url": "./images/2.jpg",
-          "title": "Image Title 11",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 12,
-          "url": "./images/3.jpg",
-          "title": "Image Title 12",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 13,
-          "url": "./images/4.jpg",
-          "title": "Image Title 13",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 14,
-          "url": "./images/5.jpg",
-          "title": "Image Title 14",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 15,
-          "url": "./images/6.jpg",
-          "title": "Image Title 15",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 16,
-          "url": "./images/7.jpg",
-          "title": "Image Title 16",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 17,
-          "url": "./images/8.jpg",
-          "title": "Image Title 17",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 18,
-          "url": "./images/9.jpg",
-          "title": "Image Title 18",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 19,
-          "url": "./images/1.jpg",
-          "title": "Image Title 19",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 20,
-          "url": "./images/2.jpg",
-          "title": "Image Title 20",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 21,
-          "url": "./images/3.jpg",
-          "title": "Image Title 21",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 22,
-          "url": "./images/4.jpg",
-          "title": "Image Title 22",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 23,
-          "url": "./images/5.jpg",
-          "title": "Image Title 23",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 24,
-          "url": "./images/6.jpg",
-          "title": "Image Title 24",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 25,
-          "url": "./images/7.jpg",
-          "title": "Image Title 25",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 26,
-          "url": "./images/8.jpg",
-          "title": "Image Title 26",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-          "id": 27,
-          "url": "./images/9.jpg",
-          "title": "Image Title 27",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        }
-      ];
+        const imageData = [
+            {
+              "id": 1,
+              "url": "./images/1.jpg",
+              "title": "Image Title 1",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 2,
+              "url": "./images/2.jpg",
+              "title": "Image Title 2",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 3,
+              "url": "./images/3.jpg",
+              "title": "Image Title 3",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 4,
+              "url": "./images/4.jpg",
+              "title": "Image Title 4",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 5,
+              "url": "./images/5.jpg",
+              "title": "Image Title 5",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 6,
+              "url": "./images/6.jpg",
+              "title": "Image Title 6",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 7,
+              "url": "./images/7.jpg",
+              "title": "Image Title 7",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 8,
+              "url": "./images/8.jpg",
+              "title": "Image Title 8",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 9,
+              "url": "./images/9.jpg",
+              "title": "Image Title 9",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 10,
+              "url": "./images/1.jpg",
+              "title": "Image Title 10",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 11,
+              "url": "./images/2.jpg",
+              "title": "Image Title 11",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 12,
+              "url": "./images/3.jpg",
+              "title": "Image Title 12",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 13,
+              "url": "./images/4.jpg",
+              "title": "Image Title 13",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 14,
+              "url": "./images/5.jpg",
+              "title": "Image Title 14",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 15,
+              "url": "./images/6.jpg",
+              "title": "Image Title 15",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 16,
+              "url": "./images/7.jpg",
+              "title": "Image Title 16",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 17,
+              "url": "./images/8.jpg",
+              "title": "Image Title 17",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 18,
+              "url": "./images/9.jpg",
+              "title": "Image Title 18",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 19,
+              "url": "./images/1.jpg",
+              "title": "Image Title 19",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 20,
+              "url": "./images/2.jpg",
+              "title": "Image Title 20",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 21,
+              "url": "./images/3.jpg",
+              "title": "Image Title 21",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 22,
+              "url": "./images/4.jpg",
+              "title": "Image Title 22",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 23,
+              "url": "./images/5.jpg",
+              "title": "Image Title 23",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 24,
+              "url": "./images/6.jpg",
+              "title": "Image Title 24",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 25,
+              "url": "./images/7.jpg",
+              "title": "Image Title 25",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 26,
+              "url": "./images/8.jpg",
+              "title": "Image Title 26",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 27,
+              "url": "./images/9.jpg",
+              "title": "Image Title 27",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            }
+        ];
 
-       // Create fog particles
-       function createFogParticles() {
-        const fogContainer = document.getElementById('fogParticles');
-        const particleCount = 20;
-        
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'fog-particle';
+        // Create fog particles
+        function createFogParticles() {
+            const fogContainer = document.getElementById('fogParticles');
+            const particleCount = 20;
             
-            // Random size
-            const size = Math.random() * 80 + 40;
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            
-            // Random position
-            particle.style.left = `${Math.random() * 100}%`;
-            particle.style.top = `${Math.random() * 100}%`;
-            
-            // Random animation delay
-            particle.style.animationDelay = `${Math.random() * 15}s`;
-            
-            fogContainer.appendChild(particle);
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'fog-particle';
+                
+                // Random size
+                const size = Math.random() * 80 + 40;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random position
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation delay
+                particle.style.animationDelay = `${Math.random() * 15}s`;
+                
+                fogContainer.appendChild(particle);
+            }
         }
-    }
 
-      
+        // Variables for drag functionality
+        let isDragging = false;
+        let startX, startY;
+        let gridTranslateX = 0;
+        let gridTranslateY = 0;
+        let lastTouchTime = 0;
+        let isMobile = window.matchMedia("(max-width: 768px)").matches;
+
         // Initialize visible boxes with images
         function initializeBoxes() {
             const boxes = document.querySelectorAll('.box[data-id]');
@@ -812,7 +699,13 @@
                 
                 if (image) {
                     box.style.backgroundImage = `url(${image.url})`;
-                    box.addEventListener('click', () => {
+                    
+                    // Add click event listeners with touch detection
+                    box.addEventListener('click', (e) => {
+                        // Prevent click if we just finished dragging
+                        const now = new Date().getTime();
+                        if (now - lastTouchTime < 300) return;
+                        
                         showDetail(image);
                     });
                 }
@@ -846,107 +739,167 @@
         function closeDetail() {
             const overlay = document.getElementById("detailOverlay");
             overlay.style.display = "none";
-
-            // Re-enable scrolling
-            document.body.style.overflow = "auto";
         }
 
-        // Handle mouse movement
-        function handleMouseMove(e) {
-            const grid = document.getElementById("grid");
-
-            // Get mouse position relative to center
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
-
-            // Calculate distance from center (normalized)
-            const distX = (mouseX - centerX) / centerX;
-            const distY = (mouseY - centerY) / centerY;
-
-            // Movement factor
-            const moveFactor = 30; // Pixels to move
-
-            // Apply inverse movement
-            const moveX = -distX * moveFactor;
-            const moveY = -distY * moveFactor;
-
-            // Apply transform with smooth transition
-            //grid.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        // Center the grid
+        function centerGrid() {
+            const container = document.querySelector('.container');
+            const grid = document.getElementById('grid');
+            
+            // Determine grid dimensions
+            const gridRect = grid.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            // Calculate center position
+            const centerX = (gridRect.width - containerRect.width) / 2;
+            const centerY = (gridRect.height - containerRect.height) / 2;
+            
+            // Set initial translation to center the grid
+            gridTranslateX = -centerX;
+            gridTranslateY = -centerY;
+            
+            grid.style.transform = `translate(${gridTranslateX}px, ${gridTranslateY}px)`;
         }
 
-        // Handle touch movement
-        function handleTouchMove(e) {
-            if (e.touches.length !== 1) return;
+        // Mouse event handlers
+       // Mouse event handlers 
+function handleMouseDown(e) {
+    // Only respond to left mouse button (button 0)
+    if (e.button !== 0) return;
     
-            e.preventDefault(); // Prevent default browser behavior
-            
-            const touch = e.touches[0];
-            const diffX = startX - touch.clientX;
-            const diffY = startY - touch.clientY;
-            
-            // Calculate new position
-            const newTranslateX = gridTranslateX - diffX;
-            const newTranslateY = gridTranslateY - diffY;
-            
-            // Apply movement
-            const grid = document.getElementById("grid");
-            grid.style.transform = `translate(${newTranslateX}px, ${newTranslateY}px)`;
-            
-            // Hide instructions after interaction
-            const instructions = document.getElementById("instructions");
-            if (instructions && !instructions.classList.contains("hide-instructions")) {
-                instructions.classList.add("hide-instructions");
-                setTimeout(() => {
-                    instructions.style.display = "none";
-                }, 500);
-            }
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    
+    const grid = document.getElementById("grid");
+    grid.classList.add('grabbing');
+    
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    
+    // Prevent default behavior
+    e.preventDefault();
+}
+
+function handleMouseMove(e) {
+    if (!isDragging) return;
+    
+    const grid = document.getElementById("grid");
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    
+    gridTranslateX += deltaX;
+    gridTranslateY += deltaY;
+    
+    grid.style.transform = `translate(${gridTranslateX}px, ${gridTranslateY}px)`;
+    
+    startX = e.clientX;
+    startY = e.clientY;
+}
+
+function handleMouseUp() {
+    isDragging = false;
+    const grid = document.getElementById("grid");
+    grid.classList.remove('grabbing');
+    grid.classList.add('grab');
+    
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+    
+    lastTouchTime = new Date().getTime();
+}
+
+// Touch event handlers for mobile
+function handleTouchStart(e) {
+    if (e.touches.length !== 1) return;
+    
+    isDragging = true;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    
+    // Prevent default to stop scrolling
+    e.preventDefault();
+}
+
+function handleTouchMove(e) {
+    if (!isDragging || e.touches.length !== 1) return;
+    
+    const grid = document.getElementById("grid");
+    const deltaX = e.touches[0].clientX - startX;
+    const deltaY = e.touches[0].clientY - startY;
+    
+    gridTranslateX += deltaX;
+    gridTranslateY += deltaY;
+    
+    grid.style.transform = `translate(${gridTranslateX}px, ${gridTranslateY}px)`;
+    
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    
+    // Prevent default to stop scrolling
+    e.preventDefault();
+}
+
+function handleTouchEnd() {
+    isDragging = false;
+    lastTouchTime = new Date().getTime();
+}
+
+// Add event listeners
+function setupEventListeners() {
+    const grid = document.getElementById("grid");
+    const closeButton = document.getElementById("closeDetail");
+    
+    // Mouse events for dragging
+    grid.addEventListener("mousedown", handleMouseDown);
+    
+    // Touch events for mobile
+    grid.addEventListener("touchstart", handleTouchStart);
+    grid.addEventListener("touchmove", handleTouchMove);
+    grid.addEventListener("touchend", handleTouchEnd);
+    
+    // Close button for detail view
+    closeButton.addEventListener("click", closeDetail);
+    
+    // Close detail when clicking outside content
+    document.getElementById("detailOverlay").addEventListener("click", function(e) {
+        if (e.target === this) {
+            closeDetail();
         }
-        // Add these new functions
-        function handleTouchStart(e) {
-            if (e.touches.length !== 1) return;
-            
-            e.preventDefault();
-            const touch = e.touches[0];
-            startX = touch.clientX;
-            startY = touch.clientY;
-        }
+    });
+    
+    // Set cursor style
+    grid.classList.add('grab');
+}
 
-        function handleTouchEnd(e) {
-            // Update the saved position
-            const grid = document.getElementById("grid");
-            const transformValue = grid.style.transform;
-            const matches = transformValue.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
-            
-            if (matches && matches.length === 3) {
-                gridTranslateX = parseFloat(matches[1]);
-                gridTranslateY = parseFloat(matches[2]);
-            }
-        }
+// Handle window resize
+function handleResize() {
+    isMobile = window.matchMedia("(max-width: 768px)").matches;
+    centerGrid();
+}
 
-        // Initialize page on load
-        document.addEventListener("DOMContentLoaded", () => {
-            initializeBoxes();
+// Initialize the application
+function init() {
+    createFogParticles();
+    initializeBoxes();
+    centerGrid();
+    setupEventListeners();
+    
+    // Add resize event listener
+    window.addEventListener("resize", handleResize);
+    
+    // Fade in instructions
+    setTimeout(() => {
+        const instructions = document.getElementById("instructions");
+        instructions.style.opacity = "1";
+        
+        // Fade out instructions after 5 seconds
+        setTimeout(() => {
+            instructions.style.opacity = "0";
+        }, 5000);
+    }, 1000);
+}
 
-            // Set up close button
-            document.getElementById("closeDetail").addEventListener("click", closeDetail);
-
-            // Set up movement listeners
-            document.addEventListener("mousemove", handleMouseMove);
-            document.addEventListener("touchmove", handleTouchMove, { passive: false });
-
-            // Center view on load
-            window.onload = function () {
-                setTimeout(() => {
-                    window.scrollTo({
-                        top: document.body.scrollHeight / 2 - window.innerHeight / 2,
-                        left: document.body.scrollWidth / 2 - window.innerWidth / 2,
-                        behavior: "smooth"
-                    });
-                }, 100);
-            };
-        });
+// Start the application when DOM is loaded
+document.addEventListener("DOMContentLoaded", init);
     </script>
-</body>
-</html>
