@@ -110,12 +110,12 @@
         
         .grid {
             display: flex;
-            height: 100%;
+            height: fit-content;
             justify-content: space-between;
             gap: 20px;
             transform: translate(0, 0);
             transition: transform 0.3s ease;
-            position: absolute;
+            position:fixed;
             top: 0;
             left: 0;
             min-width: 100%;
@@ -141,6 +141,7 @@
             height: 300px;
             box-sizing: border-box;
             opacity: 0;
+            z-index: 5;
             margin: 50px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
@@ -152,8 +153,8 @@
         
         .box:hover {
             z-index: 5;
-            transform: scale(1.05);
-            
+            transform: scale(1.2);
+                     
         }
         
         /* Make boxes visible */
@@ -272,6 +273,8 @@
         .detail-content {
             max-width: 800px;
             width: 90%;
+            height: auto;
+            padding: 5%;
             text-align: center;
             animation: fadeIn 0.5s ease;
         }
@@ -699,13 +702,7 @@
                 
                 if (image) {
                     box.style.backgroundImage = `url(${image.url})`;
-                    
-                    // Add click event listeners with touch detection
-                    box.addEventListener('click', (e) => {
-                        // Prevent click if we just finished dragging
-                        const now = new Date().getTime();
-                        if (now - lastTouchTime < 300) return;
-                        
+                    box.addEventListener('click', () => {
                         showDetail(image);
                     });
                 }
