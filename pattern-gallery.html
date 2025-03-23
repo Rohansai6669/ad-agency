@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHEME - Dynamic Grid Layout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Arial", sans-serif;
+            background-color: #fffdfc;
+            touch-action: none; /* Prevents default touch behaviors */
+            overflow: hidden; /* Prevent scrollbars */
+        }
+       
+        /* Top fog layer */
+        body::before {
+            top: 0;
+            left: 0;
+            background: radial-gradient(
+                ellipse at center,
+                rgba(255, 255, 255, 0) 30%,
+                rgba(255, 255, 255, 0.8) 100%
+            );
+        }
+        /* Bottom fog layer */
+        body::after {
+            bottom: 0;
+            left: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0) 40%,
+                rgba(255, 255, 255, 0.9) 100%
+            );
+        }
+        /* Side fog effects */
+        .side-fog-left, .side-fog-right {
+            position: fixed;
+            top: 0;
+            height: 100%;
+            width: 20%;
+            pointer-events: none;
+            z-index: 15;
+        }
+        
+        .side-fog-left {
+            left: 0;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0.9) 0%,
+                rgba(255, 255, 255, 0) 100%
+            );
+        }
+        
+        .side-fog-right {
+            right: 0;
+            background: linear-gradient(
+                to left,
+                rgba(255, 255, 255, 0.9) 0%,
+                rgba(255, 255, 255, 0) 100%
+            );
+        }
+        
+        /* Animated fog particles */
+        .fog-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 14;
+        }
+        
+        .fog-particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            filter: blur(6px);
+            animation: float 15s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.1;
+            }
+            50% {
+                transform: translateY(-20px) translateX(15px);
+                opacity: 0.3;
+            }
+        }
+
+        
+        .container {
+            width: 100%;
+            height: 100vh;
+            max-height: 2000px;
+            margin: 0 auto;
+            position: relative;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        
+        .grid {
+            display: flex;
+            height: fit-content;
+            justify-content: space-between;
+            gap: 20px;
+            transform: translate(0, 0);
+            transition: transform 0.3s ease;
+            position:fixed;
+            top: 0;
+            left: 0;
+            min-width: 100%;
+            min-height: 100%;
+            cursor: grab;
+        }
+        
+        .grid.grabbing {
+            cursor: grabbing;
+            transition: none; /* Remove transition when grabbing for immediate response */
+        }
+        
+        .column {
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .box {
+            width: 200px;
+            max-width: 200px;
+            height: 300px;
+            box-sizing: border-box;
+            opacity: 0;
+            z-index: 5;
+            margin: 50px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+           
+        }
+        
+        .box:hover {
+            z-index: 5;
+            transform: scale(1.2);
+                     
+        }
+        
+        /* Make boxes visible */
+        .col-1 .box:nth-child(-n+2),
+        .col-2 .box:nth-child(-n+5),
+        .col-3 .box:nth-child(-n+4),
+        .col-4 .box:nth-child(-n+5),
+        .col-5 .box:nth-child(-n+4),
+        .col-6 .box:nth-child(-n+5),
+        .col-7 .box:nth-child(-n+2) {
+            opacity: 1;
+        }
+
+        .col-4 .box:nth-child(3){
+            opacity: 0;
+        }
+        
+        /* Animation for boxes */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .box {
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        .brand-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            mix-blend-mode: difference;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Text animation styles for brand name */
+        .brand-name {
+            font-size: 5vw;
+            padding-left: 2%;
+            font-weight: bold;
+            color: rgb(250, 247, 247);
+            background: rgba(0, 0, 0, 0.5);
+            text-align: center;
+            letter-spacing: 2px;
+            mix-blend-mode: difference;
+            text-transform: uppercase;
+            user-select: none;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            /* Adding letter animation */
+            display: inline-block;
+            overflow: hidden;
+            animation: textReveal 1.5s ease forwards;
+        }
+
+        /* Brand text animation */
+        @keyframes textReveal {
+            0% {
+                opacity: 0;
+                transform: translateY(50px) scale(0.8);
+                letter-spacing: -5px;
+              
+            }
+            50% {
+                opacity: 0.5;
+                
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                letter-spacing: 2px;
+                filter: blur(0);
+            }
+        }
+
+        /* Individual letter animation */
+        .animated-letter {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: letterFadeIn 0.5s ease forwards;
+        }
+
+        @keyframes letterFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 30;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            flex-direction: column;
+            color: white;
+            overflow-y: auto;
+        }
+
+        .detail-content {
+            max-width: 800px;
+            width: 90%;
+            height: auto;
+            padding: 5%;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .detail-image {
+            width: 100%;
+            max-height: 60vh;
+            object-fit: contain;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Text animation for detail view */
+        .detail-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.6s ease forwards 0.3s;
+        }
+
+        .detail-description {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.6s ease forwards 0.5s;
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-button {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .close-button:hover {
+            transform: scale(1.1);
+            color: #f0f0f0;
+        }
+
+        .back-button {
+            padding: 12px 24px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.6s ease forwards 0.7s;
+        }
+
+        .back-button:hover {
+            background: #eee;
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            z-index: 25;
+            font-size: 14px;
+            opacity: 0;
+            animation: fadeIn 1.5s ease forwards 2s;
+            transition: opacity 0.5s ease;
+        }
+
+        .hide-instructions {
+            opacity: 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .brand-name {
+                font-size: 15vw;
+            }
+            
+            .grid {
+                gap: 40px;
+            }
+            
+            .column {
+                width: 50%;
+            }
+            
+            .detail-title {
+                font-size: 1.8rem;
+            }
+
+            .detail-description {
+                font-size: 1rem;
+            }
+            
+            .close-button {
+                top: 1rem;
+                right: 1rem;
+                font-size: 1.5rem;
+            }
+
+            .detail-overlay {
+                padding: 1rem;
+            }
+            
+            .instructions {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fog effects -->
+    <div class="side-fog-left"></div>
+    <div class="side-fog-right"></div>
+    <div class="fog-particles" id="fogParticles"></div>
+
+    <!-- Centered Brand Name -->
+    <div class="brand-container" style="display: block;">
+        <h1 class="brand-name">PHEME CREATOR</h1>
+        <br>
+        <a href="index.html" style="text-decoration: none;"><h1>back to home</h1> </a>
+    </div>
+
+    <!-- Instructions -->
+    <div class="instructions" id="instructions">
+        Click and drag to explore • Tap images to view details
+    </div>
+
+    <div class="container">
+        <div class="grid" id="grid">
+            <!-- Column 1: 2 boxes -->
+            <div class="column col-1" style="margin-top:550px;">
+                <div class="box" data-id="1"></div>
+                <div class="box" data-id="2"></div>
+            </div>
+            
+            <!-- Column 2: 5 boxes -->
+            <div class="column col-2">
+                <div class="box" data-id="3"></div>
+                <div class="box" data-id="4"></div>
+                <div class="box" data-id="5"></div>
+                <div class="box" data-id="6"></div>
+                <div class="box" data-id="7"></div>
+            </div>
+            
+            <!-- Column 3: 4 boxes -->
+            <div class="column col-3" style="margin-top:100px;">
+                <div class="box" data-id="8"></div>
+                <div class="box" data-id="9"></div>
+                <div class="box" data-id="10"></div>
+                <div class="box" data-id="11"></div>
+                <div class="box"></div>
+            </div>
+            
+            <!-- Column 4: 5 boxes -->
+            <div class="column col-4" style="margin-top:100px;">
+                <div class="box" data-id="12"></div>
+                <div class="box" data-id="13"></div>
+                <div class="box"></div>
+                <div class="box" data-id="14"></div>
+                <div class="box" data-id="15"></div>
+            </div>
+            
+            <!-- Column 5: 4 boxes -->
+            <div class="column col-5" style="margin-top:100px;">
+                <div class="box" data-id="16"></div>
+                <div class="box" data-id="17"></div>
+                <div class="box" data-id="18"></div>
+                <div class="box" data-id="19"></div>
+                <div class="box"></div>
+            </div>
+            
+            <!-- Column 6: 5 boxes -->
+            <div class="column col-6">
+                <div class="box" data-id="20"></div>
+                <div class="box" data-id="21"></div>
+                <div class="box" data-id="22"></div>
+                <div class="box" data-id="23"></div>
+                <div class="box" data-id="24"></div>
+            </div>
+            
+            <!-- Column 7: 2 boxes -->
+            <div class="column col-7" style="margin-top:550px;">
+                <div class="box" data-id="25"></div>
+                <div class="box" data-id="26"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Page Overlay -->
+    <div class="detail-overlay" id="detailOverlay">
+        <button class="close-button" id="closeDetail">×</button>
+        <div class="detail-content" id="detailContent">
+            <!-- Content will be dynamically populated -->
+        </div>
+    </div>
+
+    <script>
+        // Image data
+        const imageData = [
+            {
+              "id": 1,
+              "url": "./images/1.jpg",
+              "title": "Image Title 1",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 2,
+              "url": "./images/2.jpg",
+              "title": "Image Title 2",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 3,
+              "url": "./images/3.jpg",
+              "title": "Image Title 3",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 4,
+              "url": "./images/4.jpg",
+              "title": "Image Title 4",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 5,
+              "url": "./images/5.jpg",
+              "title": "Image Title 5",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 6,
+              "url": "./images/6.jpg",
+              "title": "Image Title 6",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 7,
+              "url": "./images/7.jpg",
+              "title": "Image Title 7",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 8,
+              "url": "./images/8.jpg",
+              "title": "Image Title 8",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 9,
+              "url": "./images/9.jpg",
+              "title": "Image Title 9",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 10,
+              "url": "./images/1.jpg",
+              "title": "Image Title 10",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 11,
+              "url": "./images/2.jpg",
+              "title": "Image Title 11",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 12,
+              "url": "./images/3.jpg",
+              "title": "Image Title 12",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 13,
+              "url": "./images/4.jpg",
+              "title": "Image Title 13",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 14,
+              "url": "./images/5.jpg",
+              "title": "Image Title 14",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 15,
+              "url": "./images/6.jpg",
+              "title": "Image Title 15",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 16,
+              "url": "./images/7.jpg",
+              "title": "Image Title 16",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 17,
+              "url": "./images/8.jpg",
+              "title": "Image Title 17",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 18,
+              "url": "./images/9.jpg",
+              "title": "Image Title 18",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 19,
+              "url": "./images/1.jpg",
+              "title": "Image Title 19",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 20,
+              "url": "./images/2.jpg",
+              "title": "Image Title 20",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 21,
+              "url": "./images/3.jpg",
+              "title": "Image Title 21",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 22,
+              "url": "./images/4.jpg",
+              "title": "Image Title 22",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 23,
+              "url": "./images/5.jpg",
+              "title": "Image Title 23",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 24,
+              "url": "./images/6.jpg",
+              "title": "Image Title 24",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 25,
+              "url": "./images/7.jpg",
+              "title": "Image Title 25",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 26,
+              "url": "./images/8.jpg",
+              "title": "Image Title 26",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            },
+            {
+              "id": 27,
+              "url": "./images/9.jpg",
+              "title": "Image Title 27",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            }
+        ];
+
+        // Create fog particles
+        function createFogParticles() {
+            const fogContainer = document.getElementById('fogParticles');
+            const particleCount = 20;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'fog-particle';
+                
+                // Random size
+                const size = Math.random() * 80 + 40;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random position
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation delay
+                particle.style.animationDelay = `${Math.random() * 15}s`;
+                
+                fogContainer.appendChild(particle);
+            }
+        }
+
+        // Variables for drag functionality
+        let isDragging = false;
+        let startX, startY;
+        let gridTranslateX = 0;
+        let gridTranslateY = 0;
+        let lastTouchTime = 0;
+        let isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+        // Initialize visible boxes with images
+        function initializeBoxes() {
+            const boxes = document.querySelectorAll('.box[data-id]');
+            
+            boxes.forEach(box => {
+                const imageId = parseInt(box.dataset.id);
+                const image = imageData.find(img => img.id === imageId);
+                
+                if (image) {
+                    box.style.backgroundImage = `url(${image.url})`;
+                    box.addEventListener('click', () => {
+                        showDetail(image);
+                    });
+                }
+            });
+        }
+
+        // Show detail overlay
+        function showDetail(image) {
+            const overlay = document.getElementById("detailOverlay");
+            const content = document.getElementById("detailContent");
+
+            // Populate content
+            content.innerHTML = `
+                <img src="${image.url}" alt="${image.title}" class="detail-image">
+                <h2 class="detail-title">${image.title}</h2>
+                <p class="detail-description">${image.description}</p>
+                <button class="back-button">Explore More</button>
+            `;
+
+            overlay.style.display = "flex";
+
+            // Prevent scrolling on the main page
+            document.body.style.overflow = "hidden";
+
+            // Add event listener to the back button
+            const backButton = content.querySelector(".back-button");
+            backButton.addEventListener("click", closeDetail);
+        }
+
+        // Close detail overlay
+        function closeDetail() {
+            const overlay = document.getElementById("detailOverlay");
+            overlay.style.display = "none";
+        }
+
+        // Center the grid
+        function centerGrid() {
+            const container = document.querySelector('.container');
+            const grid = document.getElementById('grid');
+            
+            // Determine grid dimensions
+            const gridRect = grid.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            // Calculate center position
+            const centerX = (gridRect.width - containerRect.width) / 2;
+            const centerY = (gridRect.height - containerRect.height) / 2;
+            
+            // Set initial translation to center the grid
+            gridTranslateX = -centerX;
+            gridTranslateY = -centerY;
+            
+            grid.style.transform = `translate(${gridTranslateX}px, ${gridTranslateY}px)`;
+        }
+
+        // Mouse event handlers
+       // Mouse event handlers 
+function handleMouseDown(e) {
+    // Only respond to left mouse button (button 0)
+    if (e.button !== 0) return;
+    
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    
+    const grid = document.getElementById("grid");
+    grid.classList.add('grabbing');
+    
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    
+    // Prevent default behavior
+    e.preventDefault();
+}
+
+function handleMouseMove(e) {
+    if (!isDragging) return;
+    
+    const grid = document.getElementById("grid");
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    
+    gridTranslateX += deltaX;
+    gridTranslateY += deltaY;
+    
+    grid.style.transform = `translate(${gridTranslateX}px, ${gridTranslateY}px)`;
+    
+    startX = e.clientX;
+    startY = e.clientY;
+}
+
+function handleMouseUp() {
+    isDragging = false;
+    const grid = document.getElementById("grid");
+    grid.classList.remove('grabbing');
+    grid.classList.add('grab');
+    
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+    
+    lastTouchTime = new Date().getTime();
+}
+
+// Touch event handlers for mobile
+function handleTouchStart(e) {
+    if (e.touches.length !== 1) return;
+    
+    isDragging = true;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    
+    // Prevent default to stop scrolling
+    e.preventDefault();
+}
+
+function handleTouchMove(e) {
+    if (!isDragging || e.touches.length !== 1) return;
+    
+    const grid = document.getElementById("grid");
+    const deltaX = e.touches[0].clientX - startX;
+    const deltaY = e.touches[0].clientY - startY;
+    
+    gridTranslateX += deltaX;
+    gridTranslateY += deltaY;
+    
+    grid.style.transform = `translate(${gridTranslateX}px, ${gridTranslateY}px)`;
+    
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    
+    // Prevent default to stop scrolling
+    e.preventDefault();
+}
+
+function handleTouchEnd() {
+    isDragging = false;
+    lastTouchTime = new Date().getTime();
+}
+
+// Add event listeners
+function setupEventListeners() {
+    const grid = document.getElementById("grid");
+    const closeButton = document.getElementById("closeDetail");
+    
+    // Mouse events for dragging
+    grid.addEventListener("mousedown", handleMouseDown);
+    
+    // Touch events for mobile
+    grid.addEventListener("touchstart", handleTouchStart);
+    grid.addEventListener("touchmove", handleTouchMove);
+    grid.addEventListener("touchend", handleTouchEnd);
+    
+    // Close button for detail view
+    closeButton.addEventListener("click", closeDetail);
+    
+    // Close detail when clicking outside content
+    document.getElementById("detailOverlay").addEventListener("click", function(e) {
+        if (e.target === this) {
+            closeDetail();
+        }
+    });
+    
+    // Set cursor style
+    grid.classList.add('grab');
+}
+
+// Handle window resize
+function handleResize() {
+    isMobile = window.matchMedia("(max-width: 768px)").matches;
+    centerGrid();
+}
+
+// Initialize the application
+function init() {
+    createFogParticles();
+    initializeBoxes();
+    centerGrid();
+    setupEventListeners();
+    
+    // Add resize event listener
+    window.addEventListener("resize", handleResize);
+    
+    // Fade in instructions
+    setTimeout(() => {
+        const instructions = document.getElementById("instructions");
+        instructions.style.opacity = "1";
+        
+        // Fade out instructions after 5 seconds
+        setTimeout(() => {
+            instructions.style.opacity = "0";
+        }, 5000);
+    }, 1000);
+}
+
+// Start the application when DOM is loaded
+document.addEventListener("DOMContentLoaded", init);
+    </script>
